@@ -2,28 +2,62 @@
 
 ## Repository Overview
 
-**STINGTOOLS** is a new repository owned by `beckykyomugisha`. This project is in its initial setup phase — no source code has been committed yet.
+**StingTools** is an Autodesk Revit plugin (addin) built with the Revit API using .NET/C#. The repository is owned by `beckykyomugisha`.
 
 This file provides guidance for AI assistants (Claude Code, etc.) working in this repository.
 
-## Project Status
+## Technology Stack
 
-- **Current state**: Empty repository — initial setup required
-- **Remote**: `origin` → `github.com/beckykyomugisha/STINGTOOLS`
+- **Platform**: Autodesk Revit (BIM software)
+- **Language**: C# / .NET
+- **Plugin type**: Revit External Application/Command (`.addin` manifest)
+- **Deployment helper**: `extract_plugin.sh` (Bash script for extracting/deploying the plugin)
+
+## Directory Structure
+
+```
+STINGTOOLS/
+├── CLAUDE.md              # AI assistant guide (this file)
+├── StingTools.addin        # Revit addin manifest (XML) — tells Revit how to load the plugin
+├── extract_plugin.sh       # Shell script for plugin extraction/deployment
+└── StingTools/             # Main plugin source code (C# project)
+```
+
+### Key Files
+
+- **`StingTools.addin`** — XML manifest file that Revit reads to discover and load the plugin. Contains the assembly path, class name, GUID (`AddInId`), and vendor info. Installed to Revit's addin directory (e.g., `C:\ProgramData\Autodesk\Revit\Addins\<year>\`).
+- **`extract_plugin.sh`** — Shell script for extracting or deploying the plugin build artifacts.
+- **`StingTools/`** — The main C# project directory containing the plugin source code, likely including a `.csproj` file and classes implementing `IExternalApplication` or `IExternalCommand`.
 
 ## Development Workflow
+
+### Building
+
+- Build the project using Visual Studio or `dotnet build` (if SDK-style `.csproj`)
+- The build output is a `.dll` assembly referenced by `StingTools.addin`
+- To test locally, copy the `.addin` manifest and built `.dll` to the Revit addins folder
+
+### Revit Addin Deployment
+
+1. Build the `StingTools` project to produce the plugin DLL
+2. Copy `StingTools.addin` to the Revit addins directory:
+   - Per-machine: `C:\ProgramData\Autodesk\Revit\Addins\<year>\`
+   - Per-user: `%APPDATA%\Autodesk\Revit\Addins\<year>\`
+3. Copy the built DLL to the path specified in the `<Assembly>` tag of the `.addin` file
+4. Restart Revit to load the plugin
 
 ### Branching
 
 - The default branch is `main`
-- Feature branches should follow the naming convention: `feature/<description>` or `claude/<session-id>`
+- Feature branches: `feature/<description>` or `claude/<session-id>`
 - Always create feature branches from the latest `main`
 
 ### Commits
 
-- Write clear, concise commit messages in imperative mood (e.g., "Add user authentication", not "Added user authentication")
+- Write clear, concise commit messages in imperative mood (e.g., "Add wall selection filter", not "Added wall selection filter")
 - Keep commits focused — one logical change per commit
 - Do not commit secrets, credentials, `.env` files, or API keys
+- Do not commit build output (`bin/`, `obj/`, `.dll` files) unless intentional
 
 ### Pull Requests
 
@@ -38,19 +72,21 @@ This file provides guidance for AI assistants (Claude Code, etc.) working in thi
 2. **Prefer edits over rewrites** — Use targeted edits instead of rewriting entire files
 3. **Don't over-engineer** — Keep changes minimal and focused on what was requested
 4. **No unnecessary files** — Don't create documentation, config, or helper files unless explicitly asked
-5. **Security first** — Never commit secrets; validate user input at system boundaries; avoid OWASP top 10 vulnerabilities
+5. **Security first** — Never commit secrets; validate user input at system boundaries
 
-### Code Style
+### C# / Revit API Style
 
-- Follow the conventions already established in the codebase (once code exists)
-- Use consistent formatting with whatever linter/formatter the project adopts
-- Prefer clarity over cleverness
+- Follow existing naming conventions in the codebase (PascalCase for public members, camelCase for locals)
+- Use Revit API best practices: always wrap DB operations in `Transaction` blocks
+- Dispose of Revit API objects properly
+- Handle `OperationCanceledException` for user-cancelled operations
+- Use `TaskDialog` for user-facing messages within Revit (not `MessageBox`)
 
 ### Testing
 
-- Run existing tests before and after making changes
-- Add tests for new functionality when a test framework is in place
-- Do not mark a task as complete if tests are failing
+- Revit plugins are difficult to unit test in isolation — prefer integration testing within Revit
+- Validate changes by loading the plugin in Revit and testing the affected commands
+- Do not mark a task as complete if the code does not compile
 
 ### Git Safety
 
@@ -58,20 +94,8 @@ This file provides guidance for AI assistants (Claude Code, etc.) working in thi
 - Never run destructive git commands (`reset --hard`, `clean -f`, `branch -D`) without confirmation
 - Always commit to the correct branch — verify before pushing
 
-## Directory Structure
-
-_To be updated as the project grows._
-
-```
-STINGTOOLS/
-├── CLAUDE.md          # This file — AI assistant guide
-└── ...                # Project source code (TBD)
-```
-
-## Build & Run
-
-_To be updated once the project's language, framework, and tooling are established._
-
 ## Dependencies
 
-_To be updated once a package manager and dependency file are added (e.g., `package.json`, `requirements.txt`, `go.mod`)._
+- **Revit API assemblies**: `RevitAPI.dll`, `RevitAPIUI.dll` (referenced from the Revit installation directory, not distributed in the repo)
+- **Target framework**: .NET Framework 4.8 (Revit 2021–2024) or .NET 8 (Revit 2025+), depending on the target Revit version
+- Additional NuGet packages as specified in the `.csproj` file
