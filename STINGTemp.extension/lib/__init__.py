@@ -1,1 +1,0 @@
-# STINGTemp shared library
