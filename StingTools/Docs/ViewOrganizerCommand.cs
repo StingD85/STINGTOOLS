@@ -30,14 +30,14 @@ namespace StingTools.Docs
                 .GroupBy(v => v.ViewType)
                 .OrderBy(g => g.Key.ToString());
 
-            int placed = views.Count(v =>
-            {
-                var sheets = new FilteredElementCollector(doc)
+            // Build placed-view set once to avoid O(n²) nested collectors
+            var placedViewIds = new HashSet<ElementId>(
+                new FilteredElementCollector(doc)
                     .OfClass(typeof(ViewSheet))
                     .Cast<ViewSheet>()
-                    .Where(s => s.GetAllPlacedViews().Contains(v.Id));
-                return sheets.Any();
-            });
+                    .SelectMany(s => s.GetAllPlacedViews()));
+
+            int placed = views.Count(v => placedViewIds.Contains(v.Id));
 
             var report = new System.Text.StringBuilder();
             report.AppendLine("View Organizer — " + doc.Title);

@@ -51,7 +51,7 @@ namespace StingTools.Docs
                 report.AppendLine($"[{group.Key}] — {group.Count()} sheets");
                 foreach (var sheet in group)
                 {
-                    string rev = sheet.GetCurrentRevision() != ElementId.InvalidElementId
+                    string rev = sheet.GetAllRevisionIds().Count > 0
                         ? " (Rev)" : "";
                     report.AppendLine($"  {sheet.SheetNumber} — {sheet.Name}{rev}");
                 }

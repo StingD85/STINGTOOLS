@@ -47,7 +47,7 @@ namespace StingTools.Docs
 
             foreach (var sheet in sheets)
             {
-                string revId = sheet.GetCurrentRevision() != ElementId.InvalidElementId
+                string revId = sheet.GetAllRevisionIds().Count > 0
                     ? "Rev" : "---";
                 report.AppendLine(
                     $"  {sheet.SheetNumber,-12} {sheet.Name,-30} {revId}");

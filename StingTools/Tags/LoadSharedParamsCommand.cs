@@ -68,7 +68,7 @@ namespace StingTools.Tags
 
                     InstanceBinding binding = app.Create.NewInstanceBinding(allCats);
                     bool result = doc.ParameterBindings.Insert(
-                        extDef, binding, BuiltInParameterGroup.INVALID);
+                        extDef, binding, GroupTypeId.General);
                     if (result)
                         pass1Bound++;
                     else
@@ -94,7 +94,7 @@ namespace StingTools.Tags
                     CategorySet cats = BuildCategorySet(doc, SharedParamGuids.AllCategories);
                     InstanceBinding binding = app.Create.NewInstanceBinding(cats);
                     bool result = doc.ParameterBindings.Insert(
-                        extDef, binding, BuiltInParameterGroup.INVALID);
+                        extDef, binding, GroupTypeId.General);
                     if (result)
                         pass2Bound++;
                     else

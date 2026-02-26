@@ -248,7 +248,54 @@ namespace StingTools.Core
             }
         }
 
-        // ── Helper: add push button to panel ────────────────────────────
+        // ── Data file utilities ───────────────────────────────────────
+
+        /// <summary>Find a data file by name, searching DataPath and subdirectories.</summary>
+        public static string FindDataFile(string fileName)
+        {
+            if (string.IsNullOrEmpty(DataPath))
+                return null;
+
+            string direct = Path.Combine(DataPath, fileName);
+            if (File.Exists(direct)) return direct;
+
+            foreach (string f in Directory.GetFiles(
+                DataPath, fileName, SearchOption.AllDirectories))
+            {
+                return f;
+            }
+            return null;
+        }
+
+        /// <summary>Parse a CSV line respecting quoted fields.</summary>
+        public static string[] ParseCsvLine(string line)
+        {
+            var result = new System.Collections.Generic.List<string>();
+            bool inQuote = false;
+            var current = new System.Text.StringBuilder();
+
+            foreach (char c in line)
+            {
+                if (c == '"')
+                {
+                    inQuote = !inQuote;
+                }
+                else if (c == ',' && !inQuote)
+                {
+                    result.Add(current.ToString());
+                    current.Clear();
+                }
+                else
+                {
+                    current.Append(c);
+                }
+            }
+            result.Add(current.ToString());
+            return result.ToArray();
+        }
+
+        // ── Ribbon helpers ───────────────────────────────────────────────
+
         private static void AddButton(RibbonPanel panel, string name,
             string text, string asmPath, string className,
             string tooltip)
@@ -258,7 +305,6 @@ namespace StingTools.Core
             panel.AddItem(data);
         }
 
-        // ── Helper: add item to pulldown ────────────────────────────────
         private static void AddPulldownItem(PulldownButton pulldown,
             string name, string text, string asmPath, string className,
             string tooltip)

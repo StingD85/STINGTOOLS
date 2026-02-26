@@ -96,7 +96,7 @@ namespace StingTools.Temp
         public static Result CreateFamilyTypes(Document doc, string typeName,
             string csvFileName, string categoryFilter)
         {
-            string csvPath = FindDataFile(csvFileName);
+            string csvPath = Core.StingToolsApp.FindDataFile(csvFileName);
             if (csvPath == null)
             {
                 TaskDialog.Show($"Create {typeName}",
@@ -117,23 +117,18 @@ namespace StingTools.Temp
                 return Result.Failed;
             }
 
-            if (lines.Length < 2)
-            {
-                TaskDialog.Show($"Create {typeName}",
-                    $"{csvFileName} has no data rows.");
-                return Result.Succeeded;
-            }
-
-            // Count matching rows (those containing the category filter)
+            // Skip comment and header lines, count matching data rows
             int matchingRows = 0;
-            for (int i = 1; i < lines.Length; i++)
+            foreach (string line in lines)
             {
-                if (!string.IsNullOrWhiteSpace(lines[i]) &&
-                    lines[i].IndexOf(categoryFilter, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
+                    continue;
+
+                if (line.IndexOf(categoryFilter, StringComparison.OrdinalIgnoreCase) >= 0)
                     matchingRows++;
-                }
             }
+            // Subtract 1 for the header row if it matched
+            if (matchingRows > 0) matchingRows--;
 
             TaskDialog.Show($"Create {typeName}",
                 $"Found {matchingRows} {categoryFilter} definitions in {csvFileName}.\n\n" +
@@ -143,23 +138,6 @@ namespace StingTools.Temp
                 "the StingBIM.Data material and family libraries.");
 
             return Result.Succeeded;
-        }
-
-        private static string FindDataFile(string fileName)
-        {
-            string dataPath = Core.StingToolsApp.DataPath;
-            if (string.IsNullOrEmpty(dataPath))
-                return null;
-
-            string direct = System.IO.Path.Combine(dataPath, fileName);
-            if (System.IO.File.Exists(direct)) return direct;
-
-            foreach (string f in System.IO.Directory.GetFiles(
-                dataPath, fileName, System.IO.SearchOption.AllDirectories))
-            {
-                return f;
-            }
-            return null;
         }
     }
 }

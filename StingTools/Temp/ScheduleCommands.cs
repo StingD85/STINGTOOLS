@@ -57,16 +57,20 @@ namespace StingTools.Temp
 
                 foreach (string file in scheduleFiles)
                 {
-                    var lines = File.ReadAllLines(file).Skip(1)
-                        .Where(l => !string.IsNullOrWhiteSpace(l));
+                    // Skip comment line (row 0: "# v2.2 ...") and header (row 1)
+                    var lines = File.ReadAllLines(file)
+                        .Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith("#"))
+                        .Skip(1); // skip header row
 
                     foreach (string line in lines)
                     {
+                        // MR_SCHEDULES columns: Source_File(0), Discipline(1),
+                        // Schedule_Name(2), Category(3), ...
                         string[] cols = line.Split(',');
-                        if (cols.Length < 2) continue;
+                        if (cols.Length < 4) continue;
 
-                        string name = cols[0].Trim().Trim('"');
-                        string category = cols[1].Trim().Trim('"');
+                        string name = cols[2].Trim().Trim('"');
+                        string category = cols[3].Trim().Trim('"');
 
                         if (string.IsNullOrEmpty(name)) continue;
                         if (existingNames.Contains(name))

@@ -21,7 +21,7 @@ namespace StingTools.Temp
             ref string message, ElementSet elements)
         {
             Document doc = commandData.Application.ActiveUIDocument.Document;
-            string csvPath = FindDataFile("BLE_MATERIALS.csv");
+            string csvPath = StingToolsApp.FindDataFile("BLE_MATERIALS.csv");
 
             if (csvPath == null)
             {
@@ -31,9 +31,10 @@ namespace StingTools.Temp
                 return Result.Failed;
             }
 
+            // Skip comment line (row 0: "# v2.2 ...") and header row
             var lines = File.ReadAllLines(csvPath)
-                .Skip(1) // header
-                .Where(l => !string.IsNullOrWhiteSpace(l))
+                .Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith("#"))
+                .Skip(1) // skip header
                 .ToList();
 
             int created = 0;
@@ -52,10 +53,13 @@ namespace StingTools.Temp
 
                 foreach (string line in lines)
                 {
-                    string[] cols = ParseCsvLine(line);
-                    if (cols.Length < 2) continue;
+                    // BLE_MATERIALS columns: SOURCE_SHEET(0), MAT_DISCIPLINE(1),
+                    // MAT_ISO_19650_ID(2), MAT_CODE(3), MAT_ELEMENT_TYPE(4),
+                    // MAT_CATEGORY(5), MAT_NAME(6), ...
+                    string[] cols = StingToolsApp.ParseCsvLine(line);
+                    if (cols.Length < 7) continue;
 
-                    string matName = cols[0].Trim();
+                    string matName = cols[6].Trim();
                     if (string.IsNullOrEmpty(matName)) continue;
 
                     if (existingNames.Contains(matName))
@@ -81,50 +85,6 @@ namespace StingTools.Temp
 
             return Result.Succeeded;
         }
-
-        private static string FindDataFile(string fileName)
-        {
-            if (string.IsNullOrEmpty(StingToolsApp.DataPath))
-                return null;
-
-            string direct = Path.Combine(StingToolsApp.DataPath, fileName);
-            if (File.Exists(direct)) return direct;
-
-            // Search subdirectories
-            foreach (string f in Directory.GetFiles(
-                StingToolsApp.DataPath, fileName, SearchOption.AllDirectories))
-            {
-                return f;
-            }
-
-            return null;
-        }
-
-        private static string[] ParseCsvLine(string line)
-        {
-            var result = new List<string>();
-            bool inQuote = false;
-            var current = new System.Text.StringBuilder();
-
-            foreach (char c in line)
-            {
-                if (c == '"')
-                {
-                    inQuote = !inQuote;
-                }
-                else if (c == ',' && !inQuote)
-                {
-                    result.Add(current.ToString());
-                    current.Clear();
-                }
-                else
-                {
-                    current.Append(c);
-                }
-            }
-            result.Add(current.ToString());
-            return result.ToArray();
-        }
     }
 
     /// <summary>
@@ -139,7 +99,7 @@ namespace StingTools.Temp
             ref string message, ElementSet elements)
         {
             Document doc = commandData.Application.ActiveUIDocument.Document;
-            string csvPath = FindDataFile("MEP_MATERIALS.csv");
+            string csvPath = StingToolsApp.FindDataFile("MEP_MATERIALS.csv");
 
             if (csvPath == null)
             {
@@ -149,9 +109,10 @@ namespace StingTools.Temp
                 return Result.Failed;
             }
 
+            // Skip comment line (row 0: "# v2.2 ...") and header row
             var lines = File.ReadAllLines(csvPath)
-                .Skip(1)
-                .Where(l => !string.IsNullOrWhiteSpace(l))
+                .Where(l => !string.IsNullOrWhiteSpace(l) && !l.StartsWith("#"))
+                .Skip(1) // skip header
                 .ToList();
 
             int created = 0;
@@ -169,10 +130,11 @@ namespace StingTools.Temp
 
                 foreach (string line in lines)
                 {
-                    string[] cols = line.Split(',');
-                    if (cols.Length < 1) continue;
+                    // MEP_MATERIALS columns: same layout as BLE — MAT_NAME is at index 6
+                    string[] cols = StingToolsApp.ParseCsvLine(line);
+                    if (cols.Length < 7) continue;
 
-                    string matName = cols[0].Trim().Trim('"');
+                    string matName = cols[6].Trim();
                     if (string.IsNullOrEmpty(matName)) continue;
 
                     if (existingNames.Contains(matName))
@@ -197,23 +159,6 @@ namespace StingTools.Temp
                 $"Source: {Path.GetFileName(csvPath)}");
 
             return Result.Succeeded;
-        }
-
-        private static string FindDataFile(string fileName)
-        {
-            if (string.IsNullOrEmpty(StingToolsApp.DataPath))
-                return null;
-
-            string direct = Path.Combine(StingToolsApp.DataPath, fileName);
-            if (File.Exists(direct)) return direct;
-
-            foreach (string f in Directory.GetFiles(
-                StingToolsApp.DataPath, fileName, SearchOption.AllDirectories))
-            {
-                return f;
-            }
-
-            return null;
         }
     }
 }
